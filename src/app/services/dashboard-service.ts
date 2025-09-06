@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { inject } from '@angular/core';
 import { environment } from '../../environment/environment';
 import { lastValueFrom, Subject } from 'rxjs';
 import { CompleteProviderDto, ServiceCompleteDto } from '../interfaces/complete-provider-dto';
@@ -63,5 +62,16 @@ export class DashboardService {
     return await lastValueFrom(this.http.delete(url));
   }
 
-  // async createNewProvider(newProvider: )
+  async getCountriesList(){
+    const url = environment.apiUrl + '/Countries/GetCountriesFromDb';
+    return await lastValueFrom(this.http.get(url));
+  }
+
+  async createNewProvider(providerData: CompleteProviderDto){
+    const url = environment.apiUrl + '/Providers/CreateNewProvider';
+    const body = {
+      ObjectRequest: JSON.stringify(providerData)
+    }
+    return await lastValueFrom(this.http.post(url, body));
+  }
 }

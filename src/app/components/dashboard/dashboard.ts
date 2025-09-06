@@ -104,7 +104,6 @@ export class Dashboard implements OnInit, AfterViewInit {
       this.providers.set(res as CompleteProviderDto[]);
       this.dataSource.data = res as CompleteProviderDto[];
     });
-    console.log(this.providers);
   }
 
   // Método para aplicar filtro de búsqueda
@@ -131,7 +130,9 @@ export class Dashboard implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(DialogNewProvider);
 
     dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
+      if(result?.valid){
+        this.getProviders();
+      }
     });
   }
 

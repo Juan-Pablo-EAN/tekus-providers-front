@@ -205,6 +205,130 @@
   font-size: 14px;
 }
 
+/* ===== SECCIÓN DE CAMPOS PERSONALIZADOS ===== */
+.fields-content {
+  padding: 0 24px 24px 24px !important;
+}
+
+.fields-count {
+  background: rgba(255, 143, 0, 0.1);
+  color: #ff8f00;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 143, 0, 0.2);
+}
+
+.add-field-btn {
+  width: 40px !important;
+  height: 40px !important;
+  background: linear-gradient(135deg, #ff8f00, #f57c00) !important;
+  box-shadow: 0 4px 12px rgba(255, 143, 0, 0.3) !important;
+}
+
+.add-field-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 143, 0, 0.4) !important;
+}
+
+.no-fields {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: rgba(255, 143, 0, 0.05);
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 143, 0, 0.2);
+}
+
+.no-fields-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: #ff8f00;
+  opacity: 0.6;
+  margin-bottom: 16px;
+}
+
+.no-fields h4 {
+  color: #ff8f00;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.no-fields p {
+  color: #999;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ===== TARJETAS DE CAMPOS PERSONALIZADOS ===== */
+.field-card {
+  margin-bottom: 20px;
+  border-radius: 12px !important;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  background: #fffbf5 !important;
+}
+
+.field-card:hover {
+  border-color: #ff8f00;
+  background: white !important;
+  box-shadow: 0 4px 16px rgba(255, 143, 0, 0.15) !important;
+}
+
+.field-header {
+  background: linear-gradient(135deg, #fff8e1, #ffecb3) !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.field-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+}
+
+.field-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.field-icon {
+  color: #ff8f00;
+  font-size: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.field-number {
+  color: #333;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.field-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-content {
+  padding: 24px !important;
+}
+
+.field-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
 /* ===== TARJETAS DE SERVICIO ===== */
 .service-card {
   margin-bottom: 20px;
@@ -344,8 +468,22 @@
 }
 
 .country-flag {
-  margin-right: 4px;
-  font-size: 16px;
+  width: 16px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 2px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.option-flag {
+  width: 18px;
+  height: 13px;
+  margin-right: 8px;
+  border-radius: 2px;
+  object-fit: cover;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 ::ng-deep .country-chip .mat-mdc-chip-remove {

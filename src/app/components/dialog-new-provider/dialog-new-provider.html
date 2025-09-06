@@ -188,8 +188,11 @@
                         addCountryToService(i, countrySelect.value); countrySelect.value = null
                       "
                     >
-                      @for (country of getAvailableCountriesForService(i); track country.code) {
-                      <mat-option [value]="country">{{ country.name }}</mat-option>
+                      @for (country of getAvailableCountriesForService(i); track country.isocode) {
+                      <mat-option [value]="country">
+                        <img [src]="country.flagImage" [alt]="country.name + ' flag'" class="option-flag">
+                        {{ country.name }}
+                      </mat-option>
                       }
                     </mat-select>
                     <mat-icon matPrefix>add_location</mat-icon>
@@ -205,13 +208,13 @@
                     </div>
                     } @else {
                     <mat-chip-set class="countries-chips">
-                      @for (country of service.get('countries')?.value; track country.code) {
+                      @for (country of service.get('countries')?.value; track country.isocode) {
                       <mat-chip
                         class="country-chip"
                         [removable]="true"
-                        (removed)="removeCountryFromService(i, country.code)"
+                        (removed)="removeCountryFromService(i, country.isocode)"
                       >
-                        <span class="country-flag">🌍</span>
+                        <img [src]="country.flagImage" [alt]="country.name + ' flag'" class="country-flag">
                         {{ country.name }}
                         <mat-icon matChipRemove>cancel</mat-icon>
                       </mat-chip>
@@ -220,6 +223,103 @@
                     }
                   </div>
                 </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Sección de Campos Personalizados -->
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div class="section-header">
+            <mat-icon class="section-icon">tune</mat-icon>
+            <h3 class="section-title">Campos Personalizados</h3>
+            <div class="section-actions">
+              <span class="fields-count">{{ customFieldsArray.length }} campo(s)</span>
+              <button
+                type="button"
+                mat-fab
+                color="accent"
+                class="add-field-btn"
+                (click)="addCustomField()"
+                matTooltip="Agregar nuevo campo personalizado"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="fields-content">
+          @if (customFieldsArray.length === 0) {
+          <div class="no-fields">
+            <mat-icon class="no-fields-icon">info</mat-icon>
+            <h4>No hay campos personalizados</h4>
+            <p>Haz clic en el botón "+" para agregar campos adicionales al proveedor</p>
+          </div>
+          }
+
+          <!-- Lista de campos personalizados -->
+          @for (field of customFieldsArray.controls; track $index; let i = $index) {
+          <mat-card class="field-card">
+            <mat-card-header class="field-header">
+              <div class="field-header-content">
+                <div class="field-title-section">
+                  <mat-icon class="field-icon">label</mat-icon>
+                  <span class="field-number">Campo {{ i + 1 }}</span>
+                </div>
+                <div class="field-actions">
+                  @if (isCustomFieldValid(i)) {
+                    <mat-icon class="status-icon valid" matTooltip="Campo válido">check_circle</mat-icon>
+                  } @else {
+                    <mat-icon class="status-icon invalid" matTooltip="Campo incompleto">error</mat-icon>
+                  }
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    (click)="removeCustomField(i)"
+                    matTooltip="Eliminar campo"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content class="field-content" [formGroup]="$any(field)">
+              <div class="field-form-grid">
+                <!-- Nombre del campo -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Nombre del campo</mat-label>
+                  <input
+                    matInput
+                    formControlName="fieldName"
+                    placeholder="Ej: Número de licencia"
+                    maxlength="50"
+                  />
+                  <mat-icon matPrefix>drive_file_rename_outline</mat-icon>
+                  @if (field.get('fieldName')?.invalid && field.get('fieldName')?.touched) {
+                    <mat-error>{{ getCustomFieldErrorMessage(i, 'fieldName') }}</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Valor del campo -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Valor del campo</mat-label>
+                  <input
+                    matInput
+                    formControlName="fieldValue"
+                    placeholder="Ej: LIC-2024-001"
+                    maxlength="100"
+                  />
+                  <mat-icon matPrefix>text_fields</mat-icon>
+                  @if (field.get('fieldValue')?.invalid && field.get('fieldValue')?.touched) {
+                    <mat-error>{{ getCustomFieldErrorMessage(i, 'fieldValue') }}</mat-error>
+                  }
+                </mat-form-field>
               </div>
             </mat-card-content>
           </mat-card>
@@ -263,6 +363,10 @@
         <div class="summary-item">
           <mat-icon class="summary-icon">miscellaneous_services</mat-icon>
           <span>Servicios válidos: {{ getValidServicesCount() }} / {{ servicesArray.length }}</span>
+        </div>
+        <div class="summary-item">
+          <mat-icon class="summary-icon">tune</mat-icon>
+          <span>Campos personalizados: {{ getValidCustomFieldsCount() }} / {{ customFieldsArray.length }}</span>
         </div>
       </div>
 
