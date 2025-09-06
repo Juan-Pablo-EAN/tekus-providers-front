@@ -82,4 +82,12 @@ export class DashboardService {
     }
     return await lastValueFrom(this.http.put(url, body));
   }
+
+  async updateServiceInfo(serviceData: ServiceCompleteDto){
+    const url = environment.apiUrl + '/Services/UpdateService';
+    const body = {
+      ObjectRequest: JSON.stringify(serviceData)
+    }
+    return await lastValueFrom(this.http.put(url, body));
+  }
 }
