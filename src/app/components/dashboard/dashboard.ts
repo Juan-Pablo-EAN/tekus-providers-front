@@ -1,4 +1,12 @@
-import { Component, inject, OnInit, signal, ViewChild, computed, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  ViewChild,
+  computed,
+  AfterViewInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +24,9 @@ import { DashboardService } from '../../services/dashboard-service';
 import { CompleteProviderDto, ServiceCompleteDto } from '../../interfaces/complete-provider-dto';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DialogServices } from '../dialog-services/dialog-services';
+import { DialogNewProvider } from '../dialog-new-provider/dialog-new-provider';
+import { DialogEditProvider } from '../dialog-edit-provider/dialog-edit-provider';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-dashboard',
@@ -55,16 +66,15 @@ export class Dashboard implements OnInit, AfterViewInit {
   filteredProviders = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const allProviders = this.providers();
-    
+
     if (!term) return allProviders;
-    
-    return allProviders.filter(provider =>
-      provider.name.toLowerCase().includes(term) ||
-      provider.email.toLowerCase().includes(term) ||
-      provider.nit?.toLowerCase().includes(term) ||
-      provider.services.some(service => 
-        service.name.toLowerCase().includes(term)
-      )
+
+    return allProviders.filter(
+      (provider) =>
+        provider.name.toLowerCase().includes(term) ||
+        provider.email.toLowerCase().includes(term) ||
+        provider.nit?.toLowerCase().includes(term) ||
+        provider.services.some((service) => service.name.toLowerCase().includes(term))
     );
   });
 
@@ -80,20 +90,20 @@ export class Dashboard implements OnInit, AfterViewInit {
     // Configurar filtro personalizado
     this.dataSource.filterPredicate = (data: CompleteProviderDto, filter: string) => {
       const term = filter.toLowerCase();
-      return data.name.toLowerCase().includes(term) ||
-             data.email.toLowerCase().includes(term) ||
-             (data.nit?.toLowerCase().includes(term) ?? false) ||
-             data.services.some(service => service.name.toLowerCase().includes(term));
+      return (
+        data.name.toLowerCase().includes(term) ||
+        data.email.toLowerCase().includes(term) ||
+        (data.nit?.toLowerCase().includes(term) ?? false) ||
+        data.services.some((service) => service.name.toLowerCase().includes(term))
+      );
     };
   }
 
   async getProviders() {
-    await this.dashboardService
-      .getProvidersInfo()
-      .then((res) => {
-        this.providers.set(res as CompleteProviderDto[]);
-        this.dataSource.data = res as CompleteProviderDto[];
-      });
+    await this.dashboardService.getProvidersInfo().then((res) => {
+      this.providers.set(res as CompleteProviderDto[]);
+      this.dataSource.data = res as CompleteProviderDto[];
+    });
     console.log(this.providers);
   }
 
@@ -118,24 +128,44 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   onCreateProvider(): void {
-    console.log('Crear nuevo proveedor');
-    // TODO: Implementar lógica para crear proveedor
+    const dialogRef = this.dialog.open(DialogNewProvider);
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log(`Dialog result: ${result}`);
+    });
   }
 
   onEditProvider(provider: CompleteProviderDto): void {
-    console.log('Editar proveedor:', provider);
-    // TODO: Implementar lógica para editar proveedor
+    this.dashboardService.setProviderInfo(provider);
+    const dialogRef = this.dialog.open(DialogEditProvider);
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log(`Dialog result: ${result}`);
+    });
   }
 
   onDeleteProvider(provider: CompleteProviderDto): void {
-    console.log('Eliminar proveedor:', provider);
-    // TODO: Implementar lógica para eliminar proveedor
-    const currentProviders = this.providers();
-    const updatedProviders = currentProviders.filter((p) => p.id !== provider.id);
-    this.providers.set(updatedProviders);
-    
-    // Actualizar dataSource
-    this.dataSource.data = updatedProviders;
+    Swal.fire({
+      icon: 'warning',
+      html: '¿Deseas eliminar ' + provider.name + ' de los proveedores?',
+      showCloseButton: true,
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Eliminar',
+      allowOutsideClick: false,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const response: any = await this.dashboardService.deleteProvider(provider.id);
+        if (response.message.includes('exitosamente')) {
+          Swal.fire(response.message, '', 'success');
+          const currentProviders = this.providers();
+          const updatedProviders = currentProviders.filter((p) => p.id !== provider.id);
+          this.providers.set(updatedProviders);
+          // Actualizar dataSource
+          this.dataSource.data = updatedProviders;
+        }
+      }
+    });
   }
 
   getStatusColor(status: string): string {

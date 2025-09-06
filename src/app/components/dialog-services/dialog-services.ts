@@ -34,7 +34,7 @@ export class DialogServices implements OnInit {
   };
 
   private readonly dashboardService = inject(DashboardService);
-  private dialogRef = inject(MatDialogRef<DialogServices>);
+  private readonly dialogRef = inject(MatDialogRef<DialogServices>);
 
   ngOnInit(): void {
     this.dashboardService.getServiceProvider().subscribe(service => {
@@ -63,7 +63,6 @@ export class DialogServices implements OnInit {
   }
 
   getCountryFlag(countryCode: string): string {
-    // Retorna la URL de la bandera o un emoji
     return `https://flagcdn.com/16x12/${countryCode.toLowerCase()}.png`;
   }
 }

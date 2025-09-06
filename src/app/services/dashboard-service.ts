@@ -3,40 +3,65 @@ import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { environment } from '../../environment/environment';
 import { lastValueFrom, Subject } from 'rxjs';
-import { ServiceCompleteDto } from '../interfaces/complete-provider-dto';
+import { CompleteProviderDto, ServiceCompleteDto } from '../interfaces/complete-provider-dto';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DashboardService {
-  private readonly http = inject(HttpClient)
+  private readonly http = inject(HttpClient);
 
-  public serviceProvider : ServiceCompleteDto = {
+  public serviceProvider: ServiceCompleteDto = {
     id: 0,
     name: '',
     valuePerHourUsd: '',
-    countries: []
+    countries: [],
   };
-  public $serviceProvider : Subject<ServiceCompleteDto>;
+  public $serviceProvider: Subject<ServiceCompleteDto>;
+  public providerInfo: CompleteProviderDto = {
+    id: 0,
+    nit: '',
+    name: '',
+    email: '',
+    customFields: [],
+    services: [],
+  };
+  public $providerInfo: Subject<CompleteProviderDto>;
 
   constructor() {
     this.$serviceProvider = new Subject<ServiceCompleteDto>();
+    this.$providerInfo = new Subject<CompleteProviderDto>();
   }
 
-  setServiceProvider(service: ServiceCompleteDto){
+  setServiceProvider(service: ServiceCompleteDto) {
     this.serviceProvider = service;
     this.$serviceProvider.next(this.serviceProvider);
   }
 
-  getServiceProvider(){
+  getServiceProvider() {
     return this.$serviceProvider.asObservable();
   }
 
-  async getProvidersInfo(){
-    const url = environment.apiUrl + '/Providers/GetCompleteProviders';
-    let response : any;
-    await lastValueFrom(this.http.get(url))
-    .then(res => response = res);
-    return response
+  setProviderInfo(provider: CompleteProviderDto) {
+    this.providerInfo = provider;
+    this.$providerInfo.next(this.providerInfo);
   }
+
+  getProviderInfo() {
+    return this.$providerInfo.asObservable();
+  }
+
+  async getProvidersInfo() {
+    const url = environment.apiUrl + '/Providers/GetCompleteProviders';
+    let response: any;
+    await lastValueFrom(this.http.get(url)).then((res) => (response = res));
+    return response;
+  }
+
+  async deleteProvider(id: number){
+    const url = environment.apiUrl + '/Providers/DeleteProvider/' + id;
+    return await lastValueFrom(this.http.delete(url));
+  }
+
+  // async createNewProvider(newProvider: )
 }
