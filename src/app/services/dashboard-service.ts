@@ -74,4 +74,12 @@ export class DashboardService {
     }
     return await lastValueFrom(this.http.post(url, body));
   }
+
+  async updateProviderInfo(providerData: CompleteProviderDto){
+    const url = environment.apiUrl + '/Providers/UpdateProvider';
+    const body = {
+      ObjectRequest: JSON.stringify(providerData)
+    }
+    return await lastValueFrom(this.http.put(url, body));
+  }
 }

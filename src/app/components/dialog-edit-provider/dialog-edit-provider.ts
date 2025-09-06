@@ -5,6 +5,7 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
+  FormArray,
   Validators,
 } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -15,8 +16,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CompleteProviderDto } from '../../interfaces/complete-provider-dto';
+import { MatChipsModule } from '@angular/material/chips';
+import { TextFieldModule } from '@angular/cdk/text-field';
+import {
+  CompleteProviderDto,
+  CustomFieldCompleteDto,
+} from '../../interfaces/complete-provider-dto';
 import { DashboardService } from '../../services/dashboard-service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-dialog-edit-provider',
@@ -33,6 +40,8 @@ import { DashboardService } from '../../services/dashboard-service';
     MatCardModule,
     MatDividerModule,
     MatTooltipModule,
+    MatChipsModule,
+    TextFieldModule,
   ],
   templateUrl: './dialog-edit-provider.html',
   styleUrl: './dialog-edit-provider.css',
@@ -55,13 +64,26 @@ export class DialogEditProvider implements OnInit {
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     nit: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(15)]],
     email: ['', [Validators.required, Validators.email]],
+    customFields: this.fb.array([]),
   });
 
   isLoading = signal(false);
   hasChanges = signal(false);
+  formChangeSignal = signal(0);
+
+  get customFieldsArray(): FormArray {
+    return this.editForm.get('customFields') as FormArray;
+  }
 
   isFormValid = computed(() => {
-    return this.editForm.valid && this.hasChanges();
+    this.formChangeSignal();
+    const basicFieldsValid = this.editForm.get('name')?.valid && 
+                            this.editForm.get('nit')?.valid && 
+                            this.editForm.get('email')?.valid;
+    
+    const customFieldsValid = this.customFieldsArray.valid;
+    
+    return basicFieldsValid && customFieldsValid && this.hasChanges();
   });
 
   ngOnInit() {
@@ -70,11 +92,14 @@ export class DialogEditProvider implements OnInit {
     });
     this.providerData = this.dashboardService.providerInfo;
 
-    // Cargar los datos del proveedor en el formulario
     this.loadProviderData();
 
     this.editForm.valueChanges.subscribe(() => {
       this.checkForChanges();
+    });
+
+    this.customFieldsArray.statusChanges.subscribe(() => {
+      this.formChangeSignal.update((v) => v + 1);
     });
   }
 
@@ -85,6 +110,19 @@ export class DialogEditProvider implements OnInit {
         name: this.providerData.name,
         nit: this.providerData.nit,
         email: this.providerData.email,
+      });
+
+      // Cargar campos personalizados
+      this.loadCustomFields();
+    }
+  }
+
+  // Cargar campos personalizados del proveedor
+  private loadCustomFields() {
+    this.customFieldsArray.clear();
+    if (this.providerData.customFields) {
+      this.providerData.customFields.forEach((field) => {
+        this.customFieldsArray.push(this.createCustomFieldGroup(field));
       });
     }
   }
@@ -97,12 +135,108 @@ export class DialogEditProvider implements OnInit {
     }
 
     const currentValues = this.editForm.value;
-    const hasChanged =
+    
+    // Verificar cambios en campos básicos
+    const basicFieldsChanged =
       currentValues.name !== this.providerData.name ||
       currentValues.nit !== this.providerData.nit ||
       currentValues.email !== this.providerData.email;
 
-    this.hasChanges.set(hasChanged);
+    // Verificar cambios en campos personalizados
+    const customFieldsChanged = this.haveCustomFieldsChanged(currentValues.customFields);
+
+    // Hay cambios si cualquiera de los dos grupos ha cambiado
+    this.hasChanges.set(basicFieldsChanged || customFieldsChanged);
+    
+    // También activar el signal para reactivity
+    this.formChangeSignal.update(v => v + 1);
+  }
+
+  // Verificar si han cambiado los campos personalizados
+  private haveCustomFieldsChanged(currentCustomFields: any[]): boolean {
+    const originalFields = this.providerData.customFields || [];
+    
+    const validCurrentFields = currentCustomFields.filter(field => 
+      field.fieldName && field.fieldName.trim() !== '' &&
+      field.fieldValue && field.fieldValue.trim() !== ''
+    );
+    
+    // Si la cantidad de campos válidos cambió
+    if (validCurrentFields.length !== originalFields.length) {
+      return true;
+    }
+
+    // Verificar si el contenido de los campos válidos cambió
+    return validCurrentFields.some((current, index) => {
+      const original = originalFields[index];
+      return !original || 
+             current.fieldName !== original.fieldName || 
+             current.fieldValue !== original.fieldValue;
+    });
+  }
+
+  // Crear un grupo de formulario para un campo personalizado
+  createCustomFieldGroup(field?: CustomFieldCompleteDto): FormGroup {
+    return this.fb.group({
+      id: [field?.id || 0],
+      fieldName: [
+        field?.fieldName || '',
+        [Validators.required, Validators.minLength(2), Validators.maxLength(50)],
+      ],
+      fieldValue: [
+        field?.fieldValue || '',
+        [Validators.required, Validators.minLength(1), Validators.maxLength(200)],
+      ],
+    });
+  }
+
+  // Agregar nuevo campo personalizado
+  addCustomField() {
+    this.customFieldsArray.push(this.createCustomFieldGroup());
+    this.formChangeSignal.update((v) => v + 1);
+  }
+
+  // Eliminar campo personalizado
+  removeCustomField(index: number) {
+    if (this.customFieldsArray.length > 0) {
+      this.customFieldsArray.removeAt(index);
+      this.formChangeSignal.update((v) => v + 1);
+    }
+  }
+
+  // Obtener mensaje de error para campos personalizados
+  getCustomFieldErrorMessage(fieldName: string, index: number): string {
+    const field = this.customFieldsArray.at(index).get(fieldName);
+
+    if (field?.hasError('required')) {
+      return fieldName === 'fieldName'
+        ? 'El nombre del campo es requerido'
+        : 'El valor del campo es requerido';
+    }
+
+    if (field?.hasError('minlength')) {
+      const minLength = field.errors?.['minlength'].requiredLength;
+      return `Mínimo ${minLength} caracteres`;
+    }
+
+    if (field?.hasError('maxlength')) {
+      const maxLength = field.errors?.['maxlength'].requiredLength;
+      return `Máximo ${maxLength} caracteres`;
+    }
+
+    return '';
+  }
+
+  // Verificar si el campo personalizado es inválido
+  isCustomFieldInvalid(fieldName: string, index: number): boolean {
+    const field = this.customFieldsArray.at(index).get(fieldName);
+    return !!(field?.invalid && field?.touched);
+  }
+
+  // Verificar si el campo personalizado es válido
+  isCustomFieldValid(fieldName: string, index: number): boolean {
+    const field = this.customFieldsArray.at(index).get(fieldName);
+    return !!(field?.valid && field?.touched);
   }
 
   // Cerrar diálogo sin guardar
@@ -118,21 +252,34 @@ export class DialogEditProvider implements OnInit {
   }
 
   // Guardar cambios
-  onSave() {
+  async onSave() {
     if (this.isFormValid()) {
       this.isLoading.set(true);
 
+      const formValue = this.editForm.value;
+      
+      // Filtrar solo los campos personalizados que están completos
+      const validCustomFields = formValue.customFields.filter((field: any) => 
+        field.fieldName && field.fieldName.trim() !== '' &&
+        field.fieldValue && field.fieldValue.trim() !== ''
+      );
+
       const updatedProvider: CompleteProviderDto = {
         id: this.providerData.id,
-        ...this.editForm.value,
+        name: formValue.name,
+        nit: formValue.nit,
+        email: formValue.email,
+        customFields: validCustomFields,
+        services: this.providerData.services, // Mantener servicios existentes
       };
 
-      // Simular guardado
-      setTimeout(() => {
-        console.log('Proveedor actualizado:', updatedProvider);
-        this.isLoading.set(false);
-        this.dialogRef.close(updatedProvider);
-      }, 1000);
+      await this.dashboardService.updateProviderInfo(updatedProvider).then((response: any) => {
+        if (response.message.includes('exitosamente')) {
+          Swal.fire('Proveedor actualizado exitosamente', '', 'success');
+          this.isLoading.set(false);
+          this.dialogRef.close(updatedProvider);
+        }
+      });
     }
   }
 

@@ -99,6 +99,23 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
+  width: 100%;
+}
+
+.card-actions {
+  margin-left: auto;
+}
+
+.add-field-btn {
+  color: #667eea !important;
+  width: 32px !important;
+  height: 32px !important;
+  transition: all 0.2s ease;
+}
+
+.add-field-btn:hover {
+  background: rgba(102, 126, 234, 0.1) !important;
+  transform: scale(1.1);
 }
 
 .card-icon {
@@ -128,6 +145,91 @@
 
 .form-field {
   width: 100%;
+}
+
+/* ===== CAMPOS PERSONALIZADOS ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+  color: rgba(102, 126, 234, 0.4);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.custom-fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.custom-field-item {
+  padding: 16px;
+  background: rgba(102, 126, 234, 0.02);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.custom-field-item:hover {
+  background: rgba(102, 126, 234, 0.04);
+  border-color: rgba(102, 126, 234, 0.2);
+  transform: translateY(-1px);
+}
+
+.field-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.field-name {
+  width: 100%;
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+
+.field-value {
+  width: 100%;
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.field-value ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 56px;
+}
+
+.remove-field-btn {
+  color: #f44336 !important;
+  width: 40px !important;
+  height: 40px !important;
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  justify-self: end;
+  align-self: start;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+}
+
+.remove-field-btn:hover {
+  background: rgba(244, 67, 54, 0.1) !important;
+  transform: scale(1.1);
 }
 
 /* Estilos personalizados para Material Form Fields */
@@ -404,6 +506,40 @@
   
   .form-status {
     justify-content: center;
+  }
+
+  /* Responsive para campos personalizados */
+  .field-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 12px;
+  }
+
+  .field-name {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+  }
+
+  .field-value {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+  }
+
+  .remove-field-btn {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+    justify-self: center;
+    margin-top: 0;
+  }
+
+  .empty-state {
+    padding: 24px 16px;
+  }
+
+  .empty-icon {
+    font-size: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
   }
 }
 
