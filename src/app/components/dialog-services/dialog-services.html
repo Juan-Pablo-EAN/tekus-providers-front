@@ -1,0 +1,187 @@
+<!-- Dialog Header -->
+<div class="dialog-header" mat-dialog-title>
+  <div class="header-content">
+    <div class="service-icon-container">
+      <mat-icon class="service-icon">miscellaneous_services</mat-icon>
+    </div>
+    <div class="title-section">
+      <h2 class="service-title">{{ serviceProvider.name || 'Servicio sin nombre' }}</h2>
+    </div>
+  </div>
+  <button mat-icon-button class="close-button" (click)="onClose()" matTooltip="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Dialog Content - Optimizado para scroll vertical -->
+<div mat-dialog-content class="dialog-content">
+  <!-- Service Information Card - Layout compacto -->
+    <mat-card-header class="card-header">
+      <mat-icon mat-card-avatar class="card-avatar">info</mat-icon>
+      <mat-card-title class="card-title">Información del Servicio</mat-card-title>
+    </mat-card-header>
+
+      <!-- Service Name - Información principal -->
+      <div class="info-row">
+        <div class="info-label">
+          <mat-icon>label</mat-icon>
+          <span>Nombre del Servicio</span>
+        </div>
+        <div class="info-value">
+          <span class="service-name-value">{{ serviceProvider.name || 'No especificado' }}</span>
+        </div>
+      </div>
+
+      <mat-divider class="info-divider"></mat-divider>
+
+      <!-- Hourly Rate - Precio destacado -->
+      <div class="info-row">
+        <div class="info-label">
+          <mat-icon>attach_money</mat-icon>
+          <span>Tarifa por Hora</span>
+        </div>
+        <div class="info-value">
+          <div class="price-container">
+            <span class="price-amount">{{ formatCurrency(serviceProvider.valuePerHourUsd) }}</span>
+            <span class="price-label">por hora</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider class="info-divider"></mat-divider>
+
+      <!-- Available Countries - Lista scrollable -->
+      <div class="info-row countries-row">
+        <div class="info-label">
+          <mat-icon>public</mat-icon>
+          <span>Países Disponibles</span>
+          <span class="country-count">({{ serviceProvider.countries?.length || 0 }})</span>
+        </div>
+        <div class="info-value">
+          <div
+            class="countries-container"
+            *ngIf="
+              serviceProvider.countries && serviceProvider.countries.length > 0;
+              else noCountries
+            "
+          >
+            <mat-chip-set class="countries-chips">
+              <mat-chip
+                *ngFor="let country of serviceProvider.countries"
+                class="country-chip"
+                [matTooltip]="country.name"
+              >
+                <img
+                  [src]="country.flagImage || getCountryFlag(country.isocode)"
+                  [alt]="country.name"
+                  class="country-flag"
+                  (error)="$event.target.style.display = 'none'"
+                />
+                <span class="country-name">{{ country.name }}</span>
+                <span class="country-code">({{ country.isocode?.toUpperCase() }})</span>
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+          <ng-template #noCountries>
+            <div class="no-countries">
+              <mat-icon class="no-data-icon">location_off</mat-icon>
+              <span>No hay países especificados</span>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <!-- Service ID -->
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>fingerprint</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">ID del Servicio</span>
+            <span class="stat-value">{{ serviceProvider.id || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <!-- Countries Count -->
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>language</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Países Cubiertos</span>
+            <span class="stat-value">{{ serviceProvider.countries?.length || 0 }}</span>
+          </div>
+        </div>
+
+        <!-- Price Range Info -->
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Tipo de Tarifa</span>
+            <span class="stat-value">Por Hora</span>
+          </div>
+        </div>
+
+        <!-- Service Status -->
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon
+              [class]="serviceProvider.countries?.length ? 'status-active' : 'status-inactive'"
+            >
+              {{ serviceProvider.countries?.length ? 'check_circle' : 'cancel' }}
+            </mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Estado</span>
+            <span
+              class="stat-value"
+              [class]="
+                serviceProvider.countries?.length ? 'status-active-text' : 'status-inactive-text'
+              "
+            >
+              {{ serviceProvider.countries?.length ? 'Disponible' : 'No Disponible' }}
+            </span>
+          </div>
+        </div>
+      </div>
+</div>
+
+<!-- Dialog Actions - Fixed bottom -->
+<div mat-dialog-actions class="dialog-actions">
+  <div class="actions-container">
+    <button
+      mat-stroked-button
+      color="primary"
+      class="action-button edit-button"
+      (click)="onEdit()"
+      matTooltip="Editar servicio"
+    >
+      <mat-icon>edit</mat-icon>
+      Editar
+    </button>
+
+    <button
+      mat-stroked-button
+      color="warn"
+      class="action-button delete-button"
+      (click)="onDelete()"
+      matTooltip="Eliminar servicio"
+    >
+      <mat-icon>delete</mat-icon>
+      Eliminar
+    </button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="action-button close-primary-button"
+      (click)="onClose()"
+      matTooltip="Cerrar dialog"
+    >
+      <mat-icon>close</mat-icon>
+      Cerrar
+    </button>
+  </div>
+</div>
