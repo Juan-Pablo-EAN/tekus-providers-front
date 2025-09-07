@@ -26,17 +26,17 @@ jobs:
 
       - name: Configure Node.js memory settings
         run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
+          export NODE_OPTIONS="--max-old-space-size=6144"
+          echo "NODE_OPTIONS=--max-old-space-size=6144" >> $GITHUB_ENV
 
       - name: Install dependencies
-        run: npm ci --production=false
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build Angular application
         run: |
-          npm run build:prod
+          npm run build -- --configuration production
         env:
-          NODE_OPTIONS: --max-old-space-size=4096
+          NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Create deployment package
         run: |
@@ -47,35 +47,33 @@ jobs:
           ls -la dist/
           ls -la dist/tekus-providers-front/ || echo "No tekus-providers-front folder found"
 
-          # Copiar toda la estructura dist/ al deployment
-          cp -r dist/ deployment/
+          # Para Angular 20 con SSR, la estructura puede ser diferente
+          if [ -d "dist/tekus-providers-front" ]; then
+            echo "📁 Using Angular 20 output structure"
+            cp -r dist/tekus-providers-front/* deployment/
+          elif [ -d "dist" ]; then
+            echo "📁 Using standard dist structure"
+            cp -r dist/* deployment/
+          fi
 
-          # También copiar archivos de configuración en la raíz del deployment
-          cp web.config deployment/
-          cp server.js deployment/
-          cp diagnostic.js deployment/
-          cp angular.json deployment/
-          cp package-lock.json deployment/
+          # Copiar archivos de configuración necesarios
+          cp web.config deployment/ 2>/dev/null || echo "web.config not found, skipping"
+          cp server.js deployment/ 2>/dev/null || echo "server.js not found, skipping"
           cp package.json deployment/
-          cp README.md deployment/
-          cp server.ts deployment/
-          cp tsconfig.app.json deployment/
-          cp tsconfig.json deployment/
-          cp tsconfig.spec.json deployment/
+          cp package-lock.json deployment/ 2>/dev/null || echo "package-lock.json not found, skipping"
 
-          # Instalar dependencias de producción
-          npm install --production --ignore-scripts
-
-          cp -r node_modules/ deployment/
+          # Para Angular 20 SSR, necesitamos las dependencias de runtime
+          echo "📦 Installing production dependencies"
+          cd deployment
+          npm install --only=production --ignore-scripts --no-audit
+          cd ..
 
           # Verificar estructura final del deployment
           echo "📋 Final deployment structure:"
-          find . -maxdepth 3 -type d
+          find deployment -maxdepth 2 -type f -name "*.mjs" -o -name "*.js" -o -name "index.html" -o -name "package.json" | head -10
           echo "🔍 Critical files check:"
-          echo "dist folder: $(test -d dist && echo '✅' || echo '❌')"
-          echo "dist/tekus-providers-front: $(test -d dist/tekus-providers-front && echo '✅' || echo '❌')"
-          echo "web.config: $(test -f web.config && echo '✅' || echo '❌')"
-          cd ..
+          echo "server.mjs or similar: $(find deployment -name "*.mjs" -o -name "server.js" | head -1 | grep -q . && echo '✅' || echo '❌')"
+          echo "package.json: $(test -f deployment/package.json && echo '✅' || echo '❌')"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -120,5 +118,8 @@ jobs:
       - name: Check deployment status
         run: |
           echo "Deployment completed. Check the app at the provided URL."
-          echo "Make sure the Startup Command in Azure is: node startup.js"
-          echo "If still having issues, check that WEBSITE_RUN_FROM_PACKAGE is set to 0 or removed"
+          echo "For Angular 20 SSR applications:"
+          echo "- Startup Command should be: node server/server.mjs"
+          echo "- Or check for the correct .mjs file in the server folder"
+          echo "- Make sure WEBSITE_RUN_FROM_PACKAGE is set to 0 or removed"
+          echo "- Ensure Node.js version is 22.x in Azure App Service"
