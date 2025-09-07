@@ -1,0 +1,284 @@
+<!-- Header del diálogo -->
+<div class="dialog-header">
+  <div class="header-content">
+    <div class="title-section">
+      <mat-icon class="header-icon">engineering</mat-icon>
+      <div class="title-info">
+        <h2 class="dialog-title">Editar Servicio</h2>
+        <span class="service-id">ID: {{ serviceProvider.id }}</span>
+      </div>
+    </div>
+    <button 
+      mat-icon-button 
+      (click)="onClose()" 
+      class="close-button"
+      matTooltip="Cerrar diálogo"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
+
+<mat-divider></mat-divider>
+
+<!-- Contenido del diálogo -->
+<div class="dialog-content">
+  <form [formGroup]="serviceForm" class="service-form">
+    
+    <!-- Información básica del servicio -->
+    <mat-card class="form-card">
+      <mat-card-header>
+        <div class="card-header">
+          <mat-icon class="card-icon">info</mat-icon>
+          <h3 class="card-title">Información del Servicio</h3>
+        </div>
+      </mat-card-header>
+      
+      <mat-card-content class="card-content">
+        <div class="form-fields">
+          
+          <!-- Campo Nombre del Servicio -->
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Nombre del servicio *</mat-label>
+            <input 
+              matInput 
+              formControlName="name" 
+              placeholder="Ej: Desarrollo de Software"
+              maxlength="100"
+              #nameInput
+            />
+            <mat-icon matPrefix>engineering</mat-icon>
+            <mat-icon 
+              matSuffix 
+              *ngIf="isFieldValid('name')" 
+              class="success-icon"
+              matTooltip="Campo válido"
+            >
+              check_circle
+            </mat-icon>
+            <mat-hint align="end">{{ nameInput.value.length || 0 }}/100</mat-hint>
+            @if (isFieldInvalid('name')) {
+              <mat-error>{{ getFieldErrorMessage('name') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Campo Valor por Hora -->
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Valor por hora (USD) *</mat-label>
+            <input 
+              matInput 
+              formControlName="valuePerHourUsd" 
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="50.00"
+              #valueInput
+            />
+            <mat-icon matPrefix>attach_money</mat-icon>
+            <mat-icon 
+              matSuffix 
+              *ngIf="isFieldValid('valuePerHourUsd')" 
+              class="success-icon"
+              matTooltip="Campo válido"
+            >
+              check_circle
+            </mat-icon>
+            <mat-hint>Ingresa el valor en dólares americanos</mat-hint>
+            @if (isFieldInvalid('valuePerHourUsd')) {
+              <mat-error>{{ getFieldErrorMessage('valuePerHourUsd') }}</mat-error>
+            }
+          </mat-form-field>
+
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Países disponibles -->
+    <mat-card class="form-card">
+      <mat-card-header>
+        <div class="card-header">
+          <mat-icon class="card-icon">public</mat-icon>
+          <h3 class="card-title">Países donde se ofrece el servicio</h3>
+        </div>
+      </mat-card-header>
+      
+      <mat-card-content class="card-content">
+        <!-- Selector de países -->
+        @if (availableToAdd().length > 0) {
+          <div class="country-selector">
+            <mat-form-field class="country-select-field" appearance="outline">
+              <mat-label>Agregar país</mat-label>
+              <mat-select [value]="selectedCountryId()" (valueChange)="selectedCountryId.set($event)" placeholder="Selecciona un país">
+                @for (country of availableToAdd(); track country.id) {
+                  <mat-option [value]="country.id">
+                    <div class="country-option">
+                      <img [src]="country.flagImage" [alt]="country.name" class="flag-small">
+                      <span>{{ country.name }}</span>
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+              <mat-icon matPrefix>flag</mat-icon>
+            </mat-form-field>
+            
+            <button 
+              type="button" 
+              mat-raised-button 
+              color="primary"
+              (click)="addCountry()"
+              [disabled]="!selectedCountryId()"
+              class="add-country-btn"
+            >
+              <mat-icon>add</mat-icon>
+              Agregar
+            </button>
+          </div>
+        }
+
+        <!-- Lista de países seleccionados -->
+        @if (countriesArray.length === 0) {
+          <div class="empty-state">
+            <mat-icon class="empty-icon">public_off</mat-icon>
+            <p>No hay países seleccionados para este servicio</p>
+            @if (availableToAdd().length > 0) {
+              <p class="empty-hint">Selecciona países donde se ofrecerá este servicio</p>
+            }
+          </div>
+        } @else {
+          <div class="countries-list" formArrayName="countries">
+            @for (country of countriesArray.controls; track $index) {
+              <div class="country-item" [formGroupName]="$index">
+                <div class="country-info">
+                  <img 
+                    [src]="country.get('flagImage')?.value" 
+                    [alt]="country.get('name')?.value" 
+                    class="flag-medium"
+                  >
+                  <div class="country-details">
+                    <span class="country-name">{{ country.get('name')?.value }}</span>
+                    <span class="country-code">{{ country.get('isocode')?.value }}</span>
+                  </div>
+                </div>
+                
+                <button 
+                  type="button" 
+                  mat-icon-button 
+                  color="warn"
+                  (click)="removeCountry($index)"
+                  matTooltip="Eliminar país"
+                  class="remove-country-btn"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Resumen de países -->
+          <div class="countries-summary">
+            <mat-icon class="summary-icon">info</mat-icon>
+            <span>
+              Servicio disponible en {{ countriesArray.length }} 
+              {{ countriesArray.length === 1 ? 'país' : 'países' }}
+            </span>
+          </div>
+        }
+
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Información de cambios -->
+    @if (hasChanges()) {
+      <div class="changes-indicator">
+        <mat-icon class="changes-icon">info</mat-icon>
+        <span>Has realizado cambios en la información del servicio</span>
+      </div>
+    }
+
+    <!-- Estado del formulario -->
+    @if (serviceForm.invalid && serviceForm.touched) {
+      <div class="form-validation-summary">
+        <mat-icon class="error-icon">error</mat-icon>
+        <div class="validation-content">
+          <h4>Hay errores en el formulario:</h4>
+          <ul class="error-list">
+            @if (isFieldInvalid('name')) {
+              <li>{{ getFieldErrorMessage('name') }}</li>
+            }
+            @if (isFieldInvalid('valuePerHourUsd')) {
+              <li>{{ getFieldErrorMessage('valuePerHourUsd') }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+  </form>
+</div>
+
+<mat-divider></mat-divider>
+
+<!-- Footer del diálogo -->
+<div class="dialog-footer">
+  <div class="footer-content">
+    
+    <!-- Estado del formulario -->
+    <div class="form-status">
+      @if (serviceForm.valid && hasChanges()) {
+        <div class="status-item success">
+          <mat-icon>check_circle</mat-icon>
+          <span>Listo para guardar</span>
+        </div>
+      } @else if (serviceForm.invalid) {
+        <div class="status-item error">
+          <mat-icon>error</mat-icon>
+          <span>Corrige los errores</span>
+        </div>
+      } @else if (!hasChanges()) {
+        <div class="status-item info">
+          <mat-icon>info</mat-icon>
+          <span>Sin cambios</span>
+        </div>
+      }
+    </div>
+    
+    <!-- Acciones del footer -->
+    <div class="footer-actions">
+
+      <!-- Botón Cancelar -->
+      <button 
+        type="button" 
+        mat-stroked-button 
+        class="cancel-btn"
+        (click)="onClose()"
+        [disabled]="isLoading()"
+      >
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+      
+      <!-- Botón Guardar -->
+      <button 
+        type="button" 
+        mat-raised-button 
+        color="primary"
+        class="save-btn"
+        [disabled]="!isFormValid() || isLoading()"
+        (click)="onSave()"
+      >
+        @if (isLoading()) {
+          <ng-container>
+            <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+            Guardando...
+          </ng-container>
+        } @else {
+          <ng-container>
+            <mat-icon>save</mat-icon>
+            Guardar Cambios
+          </ng-container>
+        }
+      </button>
+    </div>
+    
+  </div>
+</div>

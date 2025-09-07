@@ -1,0 +1,296 @@
+<!-- Header del diálogo -->
+<div class="dialog-header">
+  <div class="header-content">
+    <div class="title-section">
+      <mat-icon class="header-icon">edit</mat-icon>
+      <div class="title-info">
+        <h2 class="dialog-title">Editar Proveedor</h2>
+        <span class="provider-id">ID: {{ providerData.id }}</span>
+      </div>
+    </div>
+    <button mat-icon-button (click)="onCancel()" class="close-button" matTooltip="Cerrar diálogo">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
+
+<mat-divider></mat-divider>
+
+<!-- Contenido del diálogo -->
+<div class="dialog-content">
+  <form [formGroup]="editForm" class="edit-form">
+    <!-- Información del proveedor -->
+    <mat-card class="form-card">
+      <mat-card-header>
+        <div class="card-header">
+          <mat-icon class="card-icon">business</mat-icon>
+          <h3 class="card-title">Información del Proveedor</h3>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content class="card-content">
+        <div class="form-fields">
+          <!-- Campo Nombre -->
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Nombre de la empresa *</mat-label>
+            <input
+              matInput
+              formControlName="name"
+              placeholder="Ej: Tekus Solutions S.A.S."
+              maxlength="100"
+              #nameInput
+            />
+            <mat-icon matPrefix>business</mat-icon>
+            @if (isFieldValid('name')) {
+            <mat-icon matSuffix class="success-icon" matTooltip="Campo válido">
+              check_circle
+            </mat-icon>
+            }
+            <mat-hint align="end">{{ nameInput.value.length || 0 }}/100</mat-hint>
+            @if (isFieldInvalid('name')) {
+            <mat-error>{{ getFieldErrorMessage('name') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Campo NIT -->
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>NIT *</mat-label>
+            <input
+              matInput
+              formControlName="nit"
+              placeholder="Ej: 901234567-1"
+              maxlength="15"
+              #nitInput
+            />
+            <mat-icon matPrefix>receipt_long</mat-icon>
+            @if (isFieldValid('nit')) {
+            <mat-icon matSuffix class="success-icon" matTooltip="Campo válido">
+              check_circle
+            </mat-icon>
+            }
+            <mat-hint align="end">{{ nitInput.value.length || 0 }}/15</mat-hint>
+            @if (isFieldInvalid('nit')) {
+            <mat-error>{{ getFieldErrorMessage('nit') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Campo Email -->
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Email corporativo *</mat-label>
+            <input
+              matInput
+              formControlName="email"
+              type="email"
+              placeholder="contacto@empresa.com"
+              #emailInput
+            />
+            <mat-icon matPrefix>email</mat-icon>
+            @if (isFieldValid('email')) {
+            <mat-icon matSuffix class="success-icon" matTooltip="Campo válido">
+              check_circle
+            </mat-icon>
+            } @if (isFieldInvalid('email')) {
+            <mat-error>{{ getFieldErrorMessage('email') }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Campos Personalizados -->
+    <mat-card class="form-card">
+      <mat-card-header>
+        <div class="card-header">
+          <mat-icon class="card-icon">settings</mat-icon>
+          <h3 class="card-title">Campos Personalizados</h3>
+          <div class="card-actions">
+            <button
+              type="button"
+              mat-icon-button
+              color="primary"
+              (click)="addCustomField()"
+              matTooltip="Agregar campo personalizado"
+              class="add-field-btn"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content class="card-content">
+        @if (customFieldsArray.length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">info</mat-icon>
+          <p>No hay campos personalizados definidos</p>
+          <button type="button" mat-stroked-button color="primary" (click)="addCustomField()">
+            <mat-icon>add</mat-icon>
+            Agregar primer campo
+          </button>
+        </div>
+        } @else {
+        <div class="custom-fields-list" formArrayName="customFields">
+          @for (field of customFieldsArray.controls; track $index) {
+          <div class="custom-field-item" [formGroupName]="$index">
+            <div class="field-content">
+              <!-- Nombre del campo -->
+              <mat-form-field class="field-name" appearance="outline">
+                <mat-label>Nombre del campo</mat-label>
+                <input
+                  matInput
+                  formControlName="fieldName"
+                  placeholder="Ej: Certificaciones"
+                  maxlength="50"
+                />
+                <mat-icon matPrefix>label</mat-icon>
+                @if(isCustomFieldValid('fieldName', $index)){
+                <mat-icon matSuffix class="success-icon"> check_circle </mat-icon>
+                } @if (isCustomFieldInvalid('fieldName', $index)) {
+                <mat-error>{{ getCustomFieldErrorMessage('fieldName', $index) }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Valor del campo -->
+              <mat-form-field class="field-value" appearance="outline">
+                <mat-label>Valor del campo</mat-label>
+                <textarea
+                  matInput
+                  formControlName="fieldValue"
+                  placeholder="Ej: ISO 9001, ISO 27001"
+                  maxlength="200"
+                  rows="2"
+                  cdkTextareaAutosize
+                  #autosize="cdkTextareaAutosize"
+                  cdkAutosizeMinRows="2"
+                  cdkAutosizeMaxRows="4"
+                ></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+                @if (isCustomFieldValid('fieldValue', $index)) {
+                <mat-icon matSuffix class="success-icon"> check_circle </mat-icon>
+                } @if (isCustomFieldInvalid('fieldValue', $index)) {
+                <mat-error>{{ getCustomFieldErrorMessage('fieldValue', $index) }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- Botón eliminar -->
+              <button
+                type="button"
+                mat-icon-button
+                color="warn"
+                (click)="removeCustomField($index)"
+                matTooltip="Eliminar campo personalizado"
+                class="remove-field-btn"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Información de cambios -->
+    @if (hasChanges()) {
+    <div class="changes-indicator">
+      <mat-icon class="changes-icon">info</mat-icon>
+      <span>Has realizado cambios en la información del proveedor</span>
+    </div>
+    }
+
+    <!-- Estado del formulario -->
+    @if (editForm.invalid && editForm.touched) {
+    <div class="form-validation-summary">
+      <mat-icon class="error-icon">error</mat-icon>
+      <div class="validation-content">
+        <h4>Hay errores en el formulario:</h4>
+        <ul class="error-list">
+          @if (isFieldInvalid('name')) {
+          <li>{{ getFieldErrorMessage('name') }}</li>
+          } @if (isFieldInvalid('nit')) {
+          <li>{{ getFieldErrorMessage('nit') }}</li>
+          } @if (isFieldInvalid('email')) {
+          <li>{{ getFieldErrorMessage('email') }}</li>
+          } @for (field of customFieldsArray.controls; track $index) { @if
+          (isCustomFieldInvalid('fieldName', $index)) {
+          <li>
+            Campo personalizado #{{ $index + 1 }}:
+            {{ getCustomFieldErrorMessage('fieldName', $index) }}
+          </li>
+          } @if (isCustomFieldInvalid('fieldValue', $index)) {
+          <li>
+            Campo personalizado #{{ $index + 1 }}:
+            {{ getCustomFieldErrorMessage('fieldValue', $index) }}
+          </li>
+          } }
+        </ul>
+      </div>
+    </div>
+    }
+  </form>
+</div>
+
+<mat-divider></mat-divider>
+
+<!-- Footer del diálogo -->
+<div class="dialog-footer">
+  <div class="footer-content">
+    <!-- Estado del formulario -->
+    <div class="form-status">
+      @if (editForm.valid && hasChanges()) {
+      <div class="status-item success">
+        <mat-icon>check_circle</mat-icon>
+        <span>Listo para guardar</span>
+      </div>
+      } @else if (editForm.invalid) {
+      <div class="status-item error">
+        <mat-icon>error</mat-icon>
+        <span>Corrige los errores</span>
+      </div>
+      } @else if (!hasChanges()) {
+      <div class="status-item info">
+        <mat-icon>info</mat-icon>
+        <span>Sin cambios</span>
+      </div>
+      }
+    </div>
+
+    <!-- Acciones del footer -->
+    <div class="footer-actions">
+      <!-- Botón Cancelar -->
+      <button
+        type="button"
+        mat-stroked-button
+        class="cancel-btn"
+        (click)="onCancel()"
+        [disabled]="isLoading()"
+      >
+        <mat-icon>close</mat-icon>
+        Cancelar
+      </button>
+
+      <!-- Botón Guardar -->
+      <button
+        type="button"
+        mat-raised-button
+        color="primary"
+        class="save-btn"
+        [disabled]="!isFormValid() || isLoading()"
+        (click)="onSave()"
+      >
+        @if (isLoading()) {
+        <ng-container>
+          <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+          Guardando...
+        </ng-container>
+        } @else {
+        <ng-container>
+          <mat-icon>save</mat-icon>
+          Guardar Cambios
+        </ng-container>
+        }
+      </button>
+    </div>
+  </div>
+</div>

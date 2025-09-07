@@ -1,0 +1,408 @@
+<div class="container">
+  <!-- Header del diálogo -->
+  <div class="dialog-header">
+    <mat-toolbar class="dialog-toolbar">
+      <div class="toolbar-content">
+        <div class="title-section">
+          <mat-icon class="header-icon">add_business</mat-icon>
+          <h2 class="dialog-title">Nuevo Proveedor</h2>
+        </div>
+        <button
+          mat-icon-button
+          (click)="onCancel()"
+          class="close-button"
+          matTooltip="Cerrar diálogo"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </mat-toolbar>
+  </div>
+
+  <!-- Contenido del diálogo -->
+  <div class="dialog-content">
+    <form [formGroup]="providerForm" class="provider-form">
+      <!-- Información básica del proveedor -->
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div class="section-header">
+            <mat-icon class="section-icon">business</mat-icon>
+            <h3 class="section-title">Información Básica</h3>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="section-content">
+          <div class="form-grid">
+            <!-- Nombre -->
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Nombre de la empresa</mat-label>
+              <input
+                matInput
+                formControlName="name"
+                placeholder="Ej: Tekus Solutions S.A.S."
+                maxlength="100"
+              />
+              <mat-icon matPrefix>business</mat-icon>
+              @if (providerForm.get('name')?.invalid && providerForm.get('name')?.touched) {
+              <mat-error>{{ getFieldErrorMessage('name') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- NIT -->
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>NIT</mat-label>
+              <input matInput formControlName="nit" placeholder="Ej: 901234567-1" maxlength="15" />
+              <mat-icon matPrefix>receipt_long</mat-icon>
+              @if (providerForm.get('nit')?.invalid && providerForm.get('nit')?.touched) {
+              <mat-error>{{ getFieldErrorMessage('nit') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field class="form-field" appearance="outline">
+              <mat-label>Email corporativo</mat-label>
+              <input
+                matInput
+                formControlName="email"
+                type="email"
+                placeholder="contacto@empresa.com"
+              />
+              <mat-icon matPrefix>email</mat-icon>
+              @if (providerForm.get('email')?.invalid && providerForm.get('email')?.touched) {
+              <mat-error>{{ getFieldErrorMessage('email') }}</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Sección de Servicios -->
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div class="section-header">
+            <mat-icon class="section-icon">miscellaneous_services</mat-icon>
+            <h3 class="section-title">Servicios Ofrecidos</h3>
+            <div class="section-actions">
+              <span class="services-count">{{ servicesArray.length }} servicio(s)</span>
+              <button
+                type="button"
+                mat-fab
+                color="primary"
+                class="add-service-btn"
+                (click)="addService()"
+                matTooltip="Agregar nuevo servicio"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="services-content">
+          @if (servicesArray.length === 0) {
+          <div class="no-services">
+            <mat-icon class="no-services-icon">info</mat-icon>
+            <h4>No hay servicios agregados</h4>
+            <p>Haz clic en el botón "+" para agregar el primer servicio</p>
+          </div>
+          }
+
+          <!-- Lista de servicios -->
+          @for (service of servicesArray.controls; track $index; let i = $index) {
+          <mat-card class="service-card" [class.active]="currentServiceIndex() === i">
+            <mat-card-header class="service-header">
+              <div class="service-header-content">
+                <div class="service-title-section">
+                  <mat-icon class="service-icon">settings</mat-icon>
+                  <span class="service-number">Servicio {{ i + 1 }}</span>
+                </div>
+                <div class="service-actions">
+                  @if (isServiceValid(i)) {
+                  <mat-icon class="status-icon valid" matTooltip="Servicio válido"
+                    >check_circle</mat-icon
+                  >
+                  } @else {
+                  <mat-icon class="status-icon invalid" matTooltip="Servicio incompleto"
+                    >error</mat-icon
+                  >
+                  }
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    (click)="removeService(i)"
+                    matTooltip="Eliminar servicio"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content class="service-content" [formGroup]="$any(service)">
+              <div class="service-form-grid">
+                <!-- Nombre del servicio -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Nombre del servicio</mat-label>
+                  <input
+                    matInput
+                    formControlName="name"
+                    placeholder="Ej: Desarrollo Web"
+                    maxlength="50"
+                  />
+                  <mat-icon matPrefix>label</mat-icon>
+                  @if (service.get('name')?.invalid && service.get('name')?.touched) {
+                  <mat-error>{{ getServiceFieldErrorMessage(i, 'name') }}</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Valor por hora -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Valor por hora</mat-label>
+                  <input
+                    matInput
+                    formControlName="valuePerHourUsd"
+                    placeholder="Ej: 100"
+                    maxlength="50"
+                  />
+                  <mat-icon matPrefix>label</mat-icon>
+                  @if (service.get('name')?.invalid && service.get('name')?.touched) {
+                  <mat-error>{{ getServiceFieldErrorMessage(i, 'name') }}</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Países del servicio -->
+                <div class="countries-section full-width">
+                  <h4 class="countries-title">
+                    <mat-icon>public</mat-icon>
+                    Países donde se ofrece este servicio *
+                  </h4>
+
+                  <!-- Selector de países -->
+                  @if (getAvailableCountriesForService(i).length > 0) {
+                  <mat-form-field class="form-field" appearance="outline">
+                    <mat-label>Agregar país</mat-label>
+                    <mat-select
+                      #countrySelect
+                      (selectionChange)="
+                        addCountryToService(i, countrySelect.value); countrySelect.value = null
+                      "
+                    >
+                      @for (country of getAvailableCountriesForService(i); track country.isocode) {
+                      <mat-option [value]="country">
+                        <img [src]="country.flagImage" [alt]="country.name + ' flag'" class="option-flag">
+                        {{ country.name }}
+                      </mat-option>
+                      }
+                    </mat-select>
+                    <mat-icon matPrefix>add_location</mat-icon>
+                  </mat-form-field>
+                  }
+
+                  <!-- Países seleccionados -->
+                  <div class="selected-countries">
+                    @if (service.get('countries')?.value?.length === 0) {
+                    <div class="no-countries-selected">
+                      <mat-icon>warning</mat-icon>
+                      <span>Debe seleccionar al menos un país</span>
+                    </div>
+                    } @else {
+                    <mat-chip-set class="countries-chips">
+                      @for (country of service.get('countries')?.value; track country.isocode) {
+                      <mat-chip
+                        class="country-chip"
+                        [removable]="true"
+                        (removed)="removeCountryFromService(i, country.isocode)"
+                      >
+                        <img [src]="country.flagImage" [alt]="country.name + ' flag'" class="country-flag">
+                        {{ country.name }}
+                        <mat-icon matChipRemove>cancel</mat-icon>
+                      </mat-chip>
+                      }
+                    </mat-chip-set>
+                    }
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Sección de Campos Personalizados -->
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div class="section-header">
+            <mat-icon class="section-icon">tune</mat-icon>
+            <h3 class="section-title">Campos Personalizados</h3>
+            <div class="section-actions">
+              <span class="fields-count">{{ customFieldsArray.length }} campo(s)</span>
+              <button
+                type="button"
+                mat-fab
+                color="accent"
+                class="add-field-btn"
+                (click)="addCustomField()"
+                matTooltip="Agregar nuevo campo personalizado"
+              >
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="fields-content">
+          @if (customFieldsArray.length === 0) {
+          <div class="no-fields">
+            <mat-icon class="no-fields-icon">info</mat-icon>
+            <h4>No hay campos personalizados</h4>
+            <p>Haz clic en el botón "+" para agregar campos adicionales al proveedor</p>
+          </div>
+          }
+
+          <!-- Lista de campos personalizados -->
+          @for (field of customFieldsArray.controls; track $index; let i = $index) {
+          <mat-card class="field-card">
+            <mat-card-header class="field-header">
+              <div class="field-header-content">
+                <div class="field-title-section">
+                  <mat-icon class="field-icon">label</mat-icon>
+                  <span class="field-number">Campo {{ i + 1 }}</span>
+                </div>
+                <div class="field-actions">
+                  @if (isCustomFieldValid(i)) {
+                    <mat-icon class="status-icon valid" matTooltip="Campo válido">check_circle</mat-icon>
+                  } @else {
+                    <mat-icon class="status-icon invalid" matTooltip="Campo incompleto">error</mat-icon>
+                  }
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    (click)="removeCustomField(i)"
+                    matTooltip="Eliminar campo"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content class="field-content" [formGroup]="$any(field)">
+              <div class="field-form-grid">
+                <!-- Nombre del campo -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Nombre del campo</mat-label>
+                  <input
+                    matInput
+                    formControlName="fieldName"
+                    placeholder="Ej: Número de licencia"
+                    maxlength="50"
+                  />
+                  <mat-icon matPrefix>drive_file_rename_outline</mat-icon>
+                  @if (field.get('fieldName')?.invalid && field.get('fieldName')?.touched) {
+                    <mat-error>{{ getCustomFieldErrorMessage(i, 'fieldName') }}</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Valor del campo -->
+                <mat-form-field class="form-field" appearance="outline">
+                  <mat-label>Valor del campo</mat-label>
+                  <input
+                    matInput
+                    formControlName="fieldValue"
+                    placeholder="Ej: LIC-2024-001"
+                    maxlength="100"
+                  />
+                  <mat-icon matPrefix>text_fields</mat-icon>
+                  @if (field.get('fieldValue')?.invalid && field.get('fieldValue')?.touched) {
+                    <mat-error>{{ getCustomFieldErrorMessage(i, 'fieldValue') }}</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Validación general del formulario -->
+      @if (servicesArray.length === 0 && providerForm.touched) {
+      <div class="form-validation-error">
+        <mat-icon>error</mat-icon>
+        <span>Debe agregar al menos un servicio para continuar</span>
+      </div>
+      }
+    </form>
+  </div>
+
+  <!-- Footer del diálogo -->
+  <div class="dialog-footer">
+    <div class="footer-content">
+      <div class="form-summary">
+        <div class="summary-item">
+          <mat-icon class="summary-icon">business</mat-icon>
+          <span>Información básica: </span>
+          <span
+            [class.text-success]="
+              providerForm.get('name')?.valid &&
+              providerForm.get('email')?.valid &&
+              providerForm.get('nit')?.valid
+            "
+          >
+            {{
+              providerForm.get('name')?.valid &&
+              providerForm.get('email')?.valid &&
+              providerForm.get('nit')?.valid
+                ? 'Completa'
+                : 'Incompleta'
+            }}
+          </span>
+        </div>
+        <div class="summary-item">
+          <mat-icon class="summary-icon">miscellaneous_services</mat-icon>
+          <span>Servicios válidos: {{ getValidServicesCount() }} / {{ servicesArray.length }}</span>
+        </div>
+        <div class="summary-item">
+          <mat-icon class="summary-icon">tune</mat-icon>
+          <span>Campos personalizados: {{ getValidCustomFieldsCount() }} / {{ customFieldsArray.length }}</span>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <button
+          type="button"
+          mat-stroked-button
+          class="cancel-btn"
+          (click)="onCancel()"
+          [disabled]="isLoading()"
+        >
+          <mat-icon>close</mat-icon>
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          class="save-btn"
+          [disabled]="!isFormValid() || isLoading()"
+          (click)="onSave()"
+        >
+          @if (isLoading()) {
+          <ng-container>
+            <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+            Guardando...
+          </ng-container>
+          } @else {
+          <ng-container>
+            <mat-icon>save</mat-icon>
+            Guardar Proveedor
+          </ng-container>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
