@@ -1,3 +1,3 @@
 export const environment = {
-  apiUrl: 'https://localhost:44302/api'
+  apiUrl: 'https://tekus-providers-api.azurewebsites.net/api'
 };
