@@ -21,8 +21,8 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
-          cache: "npm"
+          node-version: '20.x'
+          cache: 'npm'
 
       - name: Configure Node.js memory settings
         run: |
@@ -47,20 +47,18 @@ jobs:
           ls -la dist/
           ls -la dist/tekus-providers-front/ || echo "No tekus-providers-front folder found"
 
-          # Para Angular 20 con SSR, la estructura puede ser diferente
-          if [ -d "dist/tekus-providers-front" ]; then
-            echo "📁 Using Angular 20 output structure"
-            cp -r dist/tekus-providers-front/* deployment/
-          elif [ -d "dist" ]; then
-            echo "📁 Using standard dist structure"
-            cp -r dist/* deployment/
-          fi
+          # Copiar toda la estructura dist/ al deployment
+          cp -r dist/ deployment/
 
           # Copiar archivos de configuración necesarios
           cp web.config deployment/ 2>/dev/null || echo "web.config not found, skipping"
           cp server.js deployment/ 2>/dev/null || echo "server.js not found, skipping"
           cp package.json deployment/
           cp package-lock.json deployment/ 2>/dev/null || echo "package-lock.json not found, skipping"
+          cp tsconfig.app.json deployment/
+          cp tsconfig.json deployment/
+          cp tsconfig.spec.json deployment/
+          cp angular.json deployment/
 
           # Para Angular 20 SSR, necesitamos las dependencias de runtime
           echo "📦 Installing production dependencies"
@@ -103,12 +101,12 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_AA4EC6A7C18149449BF5CCFA7898949D }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2AF16EAC2DBB4CEF98E48B731BCF4E9E }}
 
-      - name: "Deploy to Azure Web App"
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: "tekusprovidersapp"
-          slot-name: "Production"
+          app-name: 'tekusprovidersapp'
+          slot-name: 'Production'
           package: ./deployment
           clean: true
 
